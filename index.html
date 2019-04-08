@@ -23,17 +23,9 @@
                 let reader = new FileReader();
                 reader.onload = function(){
                     let bytes = new Uint8Array(reader.result);
-                    // let pointer = initMem(bytes.length);
-
-                    // let memoryBytes = new Uint8Array(inst.exports.mem.buffer);
-                    // memoryBytes.set(bytes, pointer);
 
                     let result = processImage(bytes);
-                    // arena could have moved
-                    // memoryBytes = new Uint8Array(inst.exports.mem.buffer);
 
-                    // let resultBytes = memoryBytes.slice(result[0], result[0] + result[1]);
-                    // let blob = new Blob([resultBytes], {'type': 'image/jpeg'});
                     let blob = new Blob([result], {'type': 'image/jpeg'});
                     document.getElementById('out').src = URL.createObjectURL(blob);
                 };

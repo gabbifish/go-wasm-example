@@ -8,20 +8,8 @@ import (
 	"image/png"
 	"log"
 	"math"
-	"reflect"
 	"syscall/js"
-	"unsafe"
 )
-
-var imgBuf []uint8
-
-func initMem(this js.Value, args []js.Value) interface{} {
-	length := args[0].Int()
-	imgBuf = make([]uint8, length)
-	hdr := (*reflect.SliceHeader)(unsafe.Pointer(&imgBuf))
-	ptr := uintptr(unsafe.Pointer(hdr.Data))
-	return int(ptr)
-}
 
 func makeGrayScale(imgPtr *image.Image) *image.Gray {
 	imgSrc := *imgPtr
@@ -50,6 +38,8 @@ func makeGrayScale(imgPtr *image.Image) *image.Gray {
 	return grayScale
 }
 
+// There must be a better way to turn a JS array into its Go equivalent that
+// doesn't involve extracting values element by element...
 func typedArrayToByteSlice(arg js.Value) []byte {
 	length := arg.Length()
 	bytes := make([]byte, length)
@@ -60,7 +50,6 @@ func typedArrayToByteSlice(arg js.Value) []byte {
 }
 
 func processImage(this js.Value, args []js.Value) interface{} {
-	//var []index
 	log.Println(args[0])
 	r := bytes.NewReader(typedArrayToByteSlice(args[0]))
 	imgSrc, _, err := image.Decode(r)
@@ -76,23 +65,13 @@ func processImage(this js.Value, args []js.Value) interface{} {
 	png.Encode(w, grayScaleImgSrc)
 	out := w.Bytes()
 
-	//hdr := (*reflect.SliceHeader)(unsafe.Pointer(&out))
-	//ptr := uintptr(unsafe.Pointer(hdr.Data))
-
-	//return []interface{}{int(ptr), len(out)}
 	return js.TypedArrayOf([]uint8(out))
-}
-
-func registerCallbacks() {
-	//js.Global().Set("initMem", js.FuncOf(initMem))
-	js.Global().Set("processImage", js.FuncOf(processImage))
 }
 
 func main() {
 	done := make(chan struct{}, 0)
 
 	log.Println("WASM Initialized")
-	//registerCallbacks()
 	processImageFunc := js.FuncOf(processImage)
 	js.Global().Set("processImage", processImageFunc)
 
