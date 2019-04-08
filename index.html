@@ -1,0 +1,48 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="wasm_exec.js"></script>
+        <script>
+            // Create Go object from wasm_exec.js.
+            const go = new Go();
+            let mod, inst;
+
+            // Load our wasm binary.
+            WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then(
+                async result => {
+                    mod = result.module;
+                    inst = result.instance;
+                    await go.run(inst);
+                }
+            );
+
+            // Function for handling uploaded images and applying transformation.
+            let openFile = async function(event) {
+                let input = event.target;
+
+                let reader = new FileReader();
+                reader.onload = function(){
+                    let bytes = new Uint8Array(reader.result);
+                    // let pointer = initMem(bytes.length);
+
+                    // let memoryBytes = new Uint8Array(inst.exports.mem.buffer);
+                    // memoryBytes.set(bytes, pointer);
+
+                    let result = processImage(bytes);
+                    // arena could have moved
+                    // memoryBytes = new Uint8Array(inst.exports.mem.buffer);
+
+                    // let resultBytes = memoryBytes.slice(result[0], result[0] + result[1]);
+                    // let blob = new Blob([resultBytes], {'type': 'image/jpeg'});
+                    let blob = new Blob([result], {'type': 'image/jpeg'});
+                    document.getElementById('out').src = URL.createObjectURL(blob);
+                };
+                reader.readAsArrayBuffer(input.files[0]);
+            };
+        </script>
+    </head>
+    <body>
+        <input type='file' accept='image/*' onchange='openFile(event)'><br>
+        <img id="out" />
+    </body>
+</html>
