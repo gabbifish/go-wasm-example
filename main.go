@@ -50,7 +50,6 @@ func typedArrayToByteSlice(arg js.Value) []byte {
 }
 
 func processImage(this js.Value, args []js.Value) interface{} {
-	log.Println(args[0])
 	r := bytes.NewReader(typedArrayToByteSlice(args[0]))
 	imgSrc, _, err := image.Decode(r)
 
@@ -65,7 +64,9 @@ func processImage(this js.Value, args []js.Value) interface{} {
 	png.Encode(w, grayScaleImgSrc)
 	out := w.Bytes()
 
-	return js.TypedArrayOf([]uint8(out))
+	result := js.TypedArrayOf([]uint8(out))
+	defer result.Release()
+	return result
 }
 
 func main() {
